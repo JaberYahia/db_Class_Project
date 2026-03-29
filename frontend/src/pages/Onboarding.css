@@ -1,0 +1,143 @@
+.onboarding {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  position: relative;
+}
+.onboarding__bg {
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse 60% 50% at 50% 30%, rgba(46,104,212,0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+.onboarding__card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 600px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 40px;
+  box-shadow: var(--shadow-card);
+}
+
+/* Progress */
+.onboarding__progress {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 36px;
+}
+.onboarding__progress-dot {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--bg-card);
+  transition: background var(--transition-slow);
+}
+.onboarding__progress-dot--done { background: var(--blue-400); }
+
+/* Step */
+.onboarding__step { display: flex; flex-direction: column; gap: 20px; }
+.onboarding__step--center { align-items: center; text-align: center; }
+
+.onboarding__emoji { font-size: 3rem; }
+.onboarding__heading {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+.onboarding__body { font-size: 0.95rem; color: var(--text-muted); line-height: 1.6; }
+.onboarding__body--dim { color: var(--text-dim); font-size: 0.875rem; margin-top: -10px; }
+
+/* Genre chips */
+.onboarding__genres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.onboarding__genre-chip {
+  padding: 9px 18px;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  background: var(--bg-card);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  transition: all var(--transition);
+}
+.onboarding__genre-chip:hover {
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+}
+.onboarding__genre-chip--selected {
+  background: rgba(46,104,212,0.2);
+  border-color: var(--blue-400);
+  color: var(--white-100);
+}
+
+/* Movie list */
+.onboarding__movies {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.onboarding__movie-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  border: 1px solid var(--border);
+}
+.onboarding__movie-poster {
+  width: 44px; height: 64px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+.onboarding__movie-poster--empty {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg-elevated);
+  color: var(--text-dim);
+  font-size: 1.4rem;
+}
+.onboarding__movie-info { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.onboarding__movie-title { font-size: 0.9rem; font-weight: 600; color: var(--text-primary); }
+.onboarding__movie-meta  { font-size: 0.75rem; color: var(--text-muted); }
+
+/* Actions */
+.onboarding__actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+.onboarding__btn {
+  background: var(--white-100);
+  color: var(--blue-600);
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 12px 28px;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition), transform var(--transition);
+}
+.onboarding__btn:hover:not(:disabled) {
+  background: var(--white-200);
+  transform: translateY(-1px);
+}
+.onboarding__btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.onboarding__btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  padding: 12px 0;
+  transition: color var(--transition);
+}
+.onboarding__btn-ghost:hover { color: var(--text-primary); }

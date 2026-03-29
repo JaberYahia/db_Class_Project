@@ -1,0 +1,49 @@
+:root {
+  /* ── Cubs-inspired palette ── */
+  --blue-900: #020B1F;
+  --blue-800: #041226;
+  --blue-700: #071D3D;
+  --blue-600: #0E3386;
+  --blue-500: #1A4BAD;
+  --blue-400: #2E68D4;
+  --blue-300: #5B8FE8;
+
+  --white-100: #FFFFFF;
+  --white-200: #EEF3FF;
+  --white-300: #D4DFFF;
+
+  /* ── Semantic ── */
+  --bg-primary:    var(--blue-800);
+  --bg-secondary:  var(--blue-700);
+  --bg-card:       var(--blue-600);
+  --bg-elevated:   var(--blue-500);
+
+  --text-primary:  var(--white-100);
+  --text-muted:    var(--white-300);
+  --text-dim:      #7A96CC;
+
+  --accent:        var(--white-100);
+  --accent-hover:  var(--white-200);
+  --accent-dim:    var(--white-300);
+
+  --border:        rgba(255, 255, 255, 0.12);
+  --border-hover:  rgba(255, 255, 255, 0.35);
+
+  /* ── Spacing ── */
+  --nav-height: 64px;
+
+  /* ── Radius ── */
+  --radius-sm:  6px;
+  --radius-md:  12px;
+  --radius-lg:  18px;
+  --radius-xl:  24px;
+
+  /* ── Shadows ── */
+  --shadow-card:    0 4px 24px rgba(0, 0, 0, 0.6);
+  --shadow-glow:    0 0 20px rgba(46, 104, 212, 0.3);
+  --shadow-glow-lg: 0 0 40px rgba(46, 104, 212, 0.45);
+
+  /* ── Transitions ── */
+  --transition: 0.2s ease;
+  --transition-slow: 0.4s ease;
+}

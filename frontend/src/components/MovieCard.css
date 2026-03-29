@@ -1,0 +1,84 @@
+.movie-card {
+  flex-shrink: 0;
+  width: 160px;
+  cursor: pointer;
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+.movie-card:hover {
+  transform: translateY(-6px) scale(1.02);
+}
+.movie-card:hover .movie-card__poster-wrap {
+  box-shadow: var(--shadow-glow-lg);
+}
+
+/* Poster */
+.movie-card__poster-wrap {
+  position: relative;
+  width: 160px;
+  height: 240px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow var(--transition-slow);
+}
+.movie-card__poster {
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+.movie-card__poster-empty {
+  width: 100%; height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  color: var(--text-dim);
+}
+
+/* Badge */
+.movie-card__badge {
+  position: absolute;
+  top: 8px; right: 8px;
+  background: rgba(4, 18, 38, 0.85);
+  color: var(--white-100);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.25);
+  backdrop-filter: blur(4px);
+}
+
+/* Info */
+.movie-card__info {
+  padding: 10px 4px 0;
+}
+.movie-card__title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+.movie-card__meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.movie-card__stars {
+  display: flex;
+  gap: 1px;
+  margin-top: 5px;
+}
+.movie-card__star {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+.movie-card__star--on {
+  color: var(--white-100);
+}
