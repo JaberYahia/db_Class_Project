@@ -40,6 +40,7 @@ async function getAverageRatings() {
   const [rows] = await pool.query(`
     SELECT
       m.id,
+      m.omdb_id,
       m.title,
       m.genre,
       m.year,

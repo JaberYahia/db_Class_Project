@@ -44,7 +44,35 @@ async function getMovieDetail(omdb_id) {
 }
 
 async function getAllMovies() {
-  return movieRepo.getAverageRatings();
+  const movies = await movieRepo.getAverageRatings();
+
+  // Fetch and cache posters for any movies missing them (runs in background)
+  const missing = movies.filter((m) => !m.poster_url);
+  if (missing.length > 0) {
+    Promise.all(
+      missing.map(async (m) => {
+        try {
+          const { data } = await axios.get('https://www.omdbapi.com/', {
+            params: { i: m.omdb_id, apikey: process.env.OMDB_API_KEY },
+          });
+          if (data.Response !== 'False' && data.Poster !== 'N/A') {
+            await movieRepo.upsert({
+              omdb_id:    m.omdb_id,
+              title:      m.title,
+              year:       m.year,
+              genre:      m.genre,
+              poster_url: data.Poster,
+            });
+            m.poster_url = data.Poster; // update in-memory for this response
+          }
+        } catch {
+          // silently skip if OMDB is unavailable for this movie
+        }
+      })
+    );
+  }
+
+  return movies;
 }
 
 async function getMovieById(id) {

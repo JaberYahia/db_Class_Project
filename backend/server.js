@@ -8,7 +8,7 @@ const ratingRoutes         = require('./src/routes/ratings');
 const recommendationRoutes = require('./src/routes/recommendations');
 
 const app  = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 app.use(cors({ origin: 'http://localhost:3000' }));
