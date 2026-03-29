@@ -43,6 +43,13 @@
   --shadow-glow:    0 0 20px rgba(46, 104, 212, 0.3);
   --shadow-glow-lg: 0 0 40px rgba(46, 104, 212, 0.45);
 
+  /* ── Accent / Gold ── */
+  --gold-500: #FFB800;
+
+  /* ── Legacy aliases (used by scrollbar) ── */
+  --brown-800: var(--blue-800);
+  --brown-500: var(--blue-400);
+
   /* ── Transitions ── */
   --transition: 0.2s ease;
   --transition-slow: 0.4s ease;

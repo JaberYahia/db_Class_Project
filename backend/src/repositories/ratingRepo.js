@@ -12,7 +12,7 @@ async function upsertRating({ user_id, movie_id, rating }) {
 async function getRatingsByUser(user_id) {
   const [rows] = await pool.query(
     `SELECT r.id, r.rating, r.updated_at,
-            m.id AS movie_id, m.title, m.genre, m.year, m.poster_url
+            m.id AS movie_id, m.omdb_id, m.title, m.genre, m.year, m.poster_url
      FROM ratings r
      JOIN movies m ON r.movie_id = m.id
      WHERE r.user_id = ?

@@ -7,6 +7,7 @@ import Home            from './pages/Home';
 import MovieDetail     from './pages/MovieDetail';
 import Recommendations from './pages/Recommendations';
 import Genres          from './pages/Genres';
+import Profile         from './pages/Profile';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -27,6 +28,7 @@ function AppRoutes() {
         <Route path="/movie/:omdbId"   element={<MovieDetail />} />
         <Route path="/recommendations" element={<ProtectedRoute><Recommendations /></ProtectedRoute>} />
         <Route path="/genres"          element={<Genres />} />
+        <Route path="/profile"         element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="*"                element={<Navigate to="/" replace />} />
       </Routes>
     </>
