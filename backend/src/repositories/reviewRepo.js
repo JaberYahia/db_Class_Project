@@ -1,0 +1,37 @@
+const pool = require('../config/db');
+
+// Insert or update a review — one review per user per movie
+async function upsertReview({ user_id, movie_id, comment }) {
+  await pool.query(
+    `INSERT INTO reviews (user_id, movie_id, comment)
+     VALUES (?, ?, ?)
+     ON DUPLICATE KEY UPDATE comment = VALUES(comment), updated_at = CURRENT_TIMESTAMP`,
+    [user_id, movie_id, comment]
+  );
+}
+
+// Get all reviews for a movie, joined with the reviewer's username and their rating (if any)
+async function getReviewsByMovie(movie_id) {
+  const [rows] = await pool.query(
+    `SELECT rv.id, rv.comment, rv.created_at, rv.updated_at,
+            u.username,
+            ra.rating
+     FROM reviews rv
+     JOIN users u ON rv.user_id = u.id
+     LEFT JOIN ratings ra ON ra.user_id = rv.user_id AND ra.movie_id = rv.movie_id
+     WHERE rv.movie_id = ?
+     ORDER BY rv.created_at DESC`,
+    [movie_id]
+  );
+  return rows;
+}
+
+// Delete a review — only the owner can do this (enforced in controller)
+async function deleteReview({ user_id, movie_id }) {
+  await pool.query(
+    'DELETE FROM reviews WHERE user_id = ? AND movie_id = ?',
+    [user_id, movie_id]
+  );
+}
+
+module.exports = { upsertReview, getReviewsByMovie, deleteReview };

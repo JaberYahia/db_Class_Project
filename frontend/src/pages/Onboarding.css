@@ -78,6 +78,112 @@
   color: var(--white-100);
 }
 
+/* Search */
+.onboarding__search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.onboarding__search-icon {
+  position: absolute;
+  left: 12px;
+  font-size: 0.85rem;
+  pointer-events: none;
+}
+.onboarding__search {
+  width: 100%;
+  padding: 10px 14px 10px 36px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  transition: border-color var(--transition);
+}
+.onboarding__search:focus {
+  border-color: var(--blue-400);
+}
+.onboarding__search::placeholder { color: var(--text-dim); }
+
+/* Selected count */
+.onboarding__selected-count {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--blue-300);
+  margin-top: -8px;
+}
+
+/* Catalog grid */
+.onboarding__catalog {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 2px 2px 2px 0;
+}
+
+.onboarding__catalog-movie {
+  position: relative;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 2px solid transparent;
+  transition: border-color var(--transition), transform var(--transition);
+}
+.onboarding__catalog-movie:hover {
+  transform: scale(1.04);
+  border-color: var(--border-hover);
+}
+.onboarding__catalog-movie--selected {
+  border-color: var(--blue-400);
+}
+.onboarding__catalog-movie img {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  display: block;
+}
+.onboarding__catalog-movie__empty {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-card);
+  font-size: 1.6rem;
+}
+.onboarding__catalog-movie__overlay {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 20px 6px 6px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.82));
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--white-100);
+  line-height: 1.2;
+}
+.onboarding__catalog-movie__check {
+  position: absolute;
+  top: 6px; right: 6px;
+  width: 22px; height: 22px;
+  background: var(--blue-400);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--white-100);
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.onboarding__catalog-movie--selected .onboarding__catalog-movie__check {
+  opacity: 1;
+  transform: scale(1);
+}
+
 /* Movie list */
 .onboarding__movies {
   display: flex;

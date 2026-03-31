@@ -1,47 +1,64 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// pages/Auth.jsx — Login and Signup page
+//
+// This single page handles both modes:
+//   • 'login'  — email + password → receive JWT, redirect to home
+//   • 'signup' — username + email + password → receive JWT, redirect to onboarding
+//
+// The toggle at the top of the card switches between the two modes without
+// navigating away from the page.
+// ─────────────────────────────────────────────────────────────────────────────
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import './Auth.css';
 
 export default function Auth() {
-  const [mode,    setMode]    = useState('login');   // 'login' | 'signup'
+  const [mode,    setMode]    = useState('login');  // Current form mode: 'login' or 'signup'
   const [form,    setForm]    = useState({ username: '', email: '', password: '' });
-  const [error,   setError]   = useState('');
-  const [loading, setLoading] = useState(false);
+  const [error,   setError]   = useState('');       // Error message to display below the form
+  const [loading, setLoading] = useState(false);    // Disables the submit button while the request is in-flight
 
-  const { login, signup } = useAuth();
+  const { login, signup } = useAuth(); // Auth functions from the global context
   const navigate          = useNavigate();
 
+  // Generic change handler — updates any field in the form object by name.
+  // e.target.name matches the 'name' attribute on each <input> element.
   function handleChange(e) {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
-    setError('');
+    setError(''); // Clear any previous error when the user starts typing
   }
 
+  // Form submission — called when the user clicks "Sign In" or "Create Account"
   async function handleSubmit(e) {
-    e.preventDefault();
+    e.preventDefault(); // Prevent the browser's default form submission (page reload)
     setLoading(true);
     setError('');
     try {
       if (mode === 'login') {
         await login(form.email, form.password);
-        navigate('/');
+        navigate('/'); // Logged-in users go straight to the home page
       } else {
         await signup(form.username, form.email, form.password);
-        navigate('/onboarding'); // take new users through questionnaire
+        navigate('/onboarding'); // New users go through the setup wizard first
       }
     } catch (err) {
+      // Display the server's error message (e.g. "Email already in use.")
+      // Fall back to a generic message if the response format is unexpected
       setError(err.response?.data?.error || 'Something went wrong.');
     } finally {
-      setLoading(false);
+      setLoading(false); // Re-enable the submit button regardless of outcome
     }
   }
 
   return (
     <div className="auth">
-      <div className="auth__bg" />
+      <div className="auth__bg" /> {/* Decorative background gradient */}
 
       <div className="auth__card fade-in">
-        {/* Logo */}
+
+        {/* App logo at top of card */}
         <div className="auth__logo">
           <span>🎬</span>
           <span>Movie Rank</span>
@@ -53,7 +70,7 @@ export default function Auth() {
             : 'Create an account to start rating movies.'}
         </p>
 
-        {/* Toggle */}
+        {/* Mode toggle: Sign In / Create Account */}
         <div className="auth__toggle">
           <button
             className={`auth__toggle-btn ${mode === 'login'  ? 'auth__toggle-btn--active' : ''}`}
@@ -65,8 +82,10 @@ export default function Auth() {
           >Create Account</button>
         </div>
 
-        {/* Form */}
+        {/* Form fields */}
         <form className="auth__form" onSubmit={handleSubmit}>
+
+          {/* Username field — only shown in signup mode */}
           {mode === 'signup' && (
             <div className="auth__field">
               <label className="auth__label">Username</label>
@@ -108,8 +127,10 @@ export default function Auth() {
             />
           </div>
 
+          {/* Show any error returned from the server */}
           {error && <p className="auth__error">{error}</p>}
 
+          {/* Submit button — shows a spinner while the request is in-flight */}
           <button className="auth__submit" type="submit" disabled={loading}>
             {loading
               ? <span className="auth__submit-spinner" />
@@ -117,6 +138,7 @@ export default function Auth() {
           </button>
         </form>
 
+        {/* Text link to switch modes at the bottom of the card */}
         <p className="auth__switch">
           {mode === 'login' ? "Don't have an account?" : 'Already have an account?'}
           {' '}

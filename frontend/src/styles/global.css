@@ -66,6 +66,19 @@ img {
   animation: fadeIn 0.35s ease forwards;
 }
 
+/* ── Global Poster Backdrop ── */
+.app-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(30px) brightness(0.35) saturate(1.2);
+  transform: scale(1.15); /* prevent blur edges */
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
 /* ── Spinner ── */
 @keyframes spin {
   to { transform: rotate(360deg); }

@@ -5,7 +5,9 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "setup-db": "node src/utils/dbSetup.js"
+    "setup-db": "node ../database/dbSetup.js",
+    "fetch-movies": "node ../database/fetchMovies.js",
+    "fetch-movies:reset": "node ../database/fetchMovies.js --reset"
   },
   "dependencies": {
     "axios": "^1.6.0",
