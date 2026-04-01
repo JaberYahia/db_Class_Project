@@ -53,4 +53,9 @@ export const getReviews    = (movieId) => api.get(`/api/reviews/${movieId}`);
 export const submitReview  = (data)    => api.post('/api/reviews', data);
 export const deleteReview  = (movieId) => api.delete(`/api/reviews/${movieId}`);
 
+// ─── TMDB Endpoints ───────────────────────────────────────────────────────────
+
+export const getUpcomingMovies = ()       => api.get('/api/tmdb/upcoming');
+export const getTrailer        = (omdbId) => api.get(`/api/tmdb/trailer/${omdbId}`);
+
 export default api;

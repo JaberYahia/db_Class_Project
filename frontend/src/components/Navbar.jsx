@@ -94,8 +94,7 @@ export default function Navbar() {
 
         {/* Logo — always links back to the home page */}
         <Link to="/" className="navbar__logo">
-          <span className="navbar__logo-icon">🎬</span>
-          <span className="navbar__logo-text">Movie Rank</span>
+          <span className="navbar__logo-text">MovieRank</span>
         </Link>
 
         {/* Nav Links — the active link gets a highlighted style */}

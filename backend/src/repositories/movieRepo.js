@@ -75,4 +75,17 @@ async function getAverageRatings() {
   return rows;
 }
 
-module.exports = { findAll, findById, findByOmdbId, upsert, getAverageRatings };
+// Fetch multiple movies by their internal IDs in a single query.
+// Used by the recommendation engine to avoid N+1 queries.
+// Returns a Map of id → movie for O(1) lookups by the caller.
+async function findByIds(ids) {
+  if (ids.length === 0) return new Map();
+  const placeholders = ids.map(() => '?').join(', ');
+  const [rows] = await pool.query(
+    `SELECT id, omdb_id, title, year, genre, poster_url FROM movies WHERE id IN (${placeholders})`,
+    ids
+  );
+  return new Map(rows.map((m) => [m.id, m]));
+}
+
+module.exports = { findAll, findById, findByIds, findByOmdbId, upsert, getAverageRatings };

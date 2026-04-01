@@ -12,12 +12,13 @@ require('dotenv').config(); // Load DB credentials, JWT secret, and OMDB key fro
 const express = require('express');
 const cors    = require('cors');
 
-// Import the four route modules — each handles a distinct feature area
+// Import the five route modules — each handles a distinct feature area
 const authRoutes           = require('./src/routes/auth');
 const movieRoutes          = require('./src/routes/movies');
 const ratingRoutes         = require('./src/routes/ratings');
 const recommendationRoutes = require('./src/routes/recommendations');
 const reviewRoutes         = require('./src/routes/reviews');
+const tmdbRoutes           = require('./src/routes/tmdb');
 
 const app  = express();
 const PORT = process.env.PORT || 5001; // Default to 5001 if PORT is not set in .env
@@ -53,16 +54,21 @@ app.use('/api/recommendations', recommendationRoutes);
 // DELETE /api/reviews/:movieId → delete own review (auth required)
 app.use('/api/reviews', reviewRoutes);
 
+// GET /api/tmdb/upcoming        → upcoming movies from TMDB
+// GET /api/tmdb/trailer/:omdbId → YouTube trailer key for a movie
+app.use('/api/tmdb', tmdbRoutes);
+
 // ─── Health Check ─────────────────────────────────────────────────────────────
 
 // Simple endpoint to confirm the server is up — useful for debugging
-app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
 
 // ─── Global Error Handler ─────────────────────────────────────────────────────
 
 // Catches any unhandled errors thrown inside route handlers and returns a
 // clean 500 response instead of crashing the server
-app.use((err, req, res, next) => {
+// eslint-disable-next-line no-unused-vars
+app.use((err, _req, res, _next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Internal server error.' });
 });

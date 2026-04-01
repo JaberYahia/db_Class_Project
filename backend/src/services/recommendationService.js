@@ -128,17 +128,16 @@ async function getRecommendations(userId, limit = 10) {
     return getTopRatedFallback(userId, limit);
   }
 
-  // Step 8: Attach full movie details (title, poster, genre) to each prediction
-  const results = [];
-  for (const { movie_id, predicted_rating } of predictions) {
-    const movie = await movieRepo.findById(movie_id);
-    if (movie) {
-      results.push({
-        ...movie,
-        predicted_rating: Math.round(predicted_rating * 10) / 10, // Round to 1 decimal
-      });
-    }
-  }
+  // Step 8: Fetch all predicted movies in a single query (avoids N+1 sequential lookups)
+  const movieIds = predictions.map((p) => p.movie_id);
+  const movieMap = await movieRepo.findByIds(movieIds);
+
+  const results = predictions
+    .filter(({ movie_id }) => movieMap.has(movie_id))
+    .map(({ movie_id, predicted_rating }) => ({
+      ...movieMap.get(movie_id),
+      predicted_rating: Math.round(predicted_rating * 10) / 10,
+    }));
 
   return results;
 }

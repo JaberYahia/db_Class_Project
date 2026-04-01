@@ -10,24 +10,31 @@
 
 const authService = require('../services/authService');
 
+// Known business-logic error messages thrown intentionally by authService.
+// These map to 4xx responses. Any other error is an infrastructure failure → 500.
+const CLIENT_ERRORS = new Set([
+  'Email already in use.',
+  'Username already taken.',
+  'Invalid email or password.',
+]);
+
 // POST /api/auth/signup
 // Creates a new user account and returns a JWT token so they're logged in immediately.
 async function signup(req, res) {
   try {
-    const { username, email, password } = req.body; // Extract fields from the request body
+    const { username, email, password } = req.body;
 
-    // Basic validation — make sure all three fields were sent
     if (!username || !email || !password) {
       return res.status(400).json({ error: 'username, email, and password are required.' });
     }
 
-    // Delegate to the service for hashing, duplicate checks, and token generation
     const result = await authService.signup({ username, email, password });
-
-    res.status(201).json(result); // 201 Created — return { user, token }
+    res.status(201).json(result);
   } catch (err) {
-    // authService throws descriptive errors (e.g. "Email already in use.")
-    res.status(400).json({ error: err.message });
+    if (CLIENT_ERRORS.has(err.message)) {
+      return res.status(400).json({ error: err.message });
+    }
+    res.status(500).json({ error: 'Internal server error.' });
   }
 }
 
@@ -42,11 +49,12 @@ async function login(req, res) {
     }
 
     const result = await authService.login({ email, password });
-
-    res.json(result); // 200 OK — return { user, token }
+    res.json(result);
   } catch (err) {
-    // 401 Unauthorized — wrong credentials
-    res.status(401).json({ error: err.message });
+    if (CLIENT_ERRORS.has(err.message)) {
+      return res.status(401).json({ error: err.message });
+    }
+    res.status(500).json({ error: 'Internal server error.' });
   }
 }
 

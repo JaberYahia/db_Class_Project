@@ -1,6 +1,8 @@
 const reviewRepo = require('../repositories/reviewRepo');
 const movieRepo  = require('../repositories/movieRepo');
 
+const MAX_COMMENT_LENGTH = 2000;
+
 // GET /api/reviews/:movieId
 // Returns all reviews for a movie. Public — no auth needed.
 async function getReviews(req, res) {
@@ -11,7 +13,7 @@ async function getReviews(req, res) {
     const reviews = await reviewRepo.getReviewsByMovie(movie.id);
     res.json(reviews);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Internal server error.' });
   }
 }
 
@@ -24,10 +26,20 @@ async function submitReview(req, res) {
     if (!movie_id || !comment?.trim()) {
       return res.status(400).json({ error: 'movie_id and comment are required.' });
     }
-    await reviewRepo.upsertReview({ user_id: req.user.id, movie_id, comment: comment.trim() });
+
+    const trimmed = comment.trim();
+    if (trimmed.length > MAX_COMMENT_LENGTH) {
+      return res.status(400).json({ error: `Comment must be ${MAX_COMMENT_LENGTH} characters or fewer.` });
+    }
+
+    // Verify the movie exists so we return a clean 404 instead of a raw DB error
+    const movie = await movieRepo.findById(movie_id);
+    if (!movie) return res.status(404).json({ error: 'Movie not found.' });
+
+    await reviewRepo.upsertReview({ user_id: req.user.id, movie_id, comment: trimmed });
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Internal server error.' });
   }
 }
 
@@ -38,10 +50,12 @@ async function deleteReview(req, res) {
     const movie = await movieRepo.findById(req.params.movieId);
     if (!movie) return res.status(404).json({ error: 'Movie not found.' });
 
-    await reviewRepo.deleteReview({ user_id: req.user.id, movie_id: movie.id });
+    const deleted = await reviewRepo.deleteReview({ user_id: req.user.id, movie_id: movie.id });
+    if (!deleted) return res.status(404).json({ error: 'Review not found.' });
+
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Internal server error.' });
   }
 }
 

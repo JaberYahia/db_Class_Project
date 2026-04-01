@@ -1,31 +1,40 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getMovieDetail, submitRating, getReviews, submitReview, deleteReview } from '../services/api';
+import { getMovieDetail, submitRating, getReviews, submitReview, deleteReview, getTrailer } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
-import StarRating from '../components/StarRating';
 import './MovieDetail.css';
 
+// Convert a 1-10 rating to filled/half/empty star states on a 5-star scale
+function getStarStates(ratingOutOf10) {
+  const val = ratingOutOf10 / 2; // 0–5
+  return [1, 2, 3, 4, 5].map((i) => {
+    if (val >= i)       return 'full';
+    if (val >= i - 0.5) return 'half';
+    return 'empty';
+  });
+}
+
 export default function MovieDetail() {
-  const { omdbId }              = useParams();
-  const { user }                = useAuth();
-  const navigate                = useNavigate();
-  const [movie,   setMovie]     = useState(null);
-  const [rating,  setRating]    = useState(0);
-  const [saved,   setSaved]     = useState(false);
-  const [saving,  setSaving]    = useState(false);
-  const [loading, setLoading]   = useState(true);
-  const [error,   setError]     = useState(false);
+  const { omdbId }           = useParams();
+  const { user }             = useAuth();
+  const navigate             = useNavigate();
+  const [movie,   setMovie]  = useState(null);
+  const [rating,  setRating] = useState(0);
+  const [saved,   setSaved]  = useState(false);
+  const [saving,  setSaving] = useState(false);
+  const [loading, setLoading]= useState(true);
+  const [error,   setError]  = useState(false);
 
-  // Reviews state
-  const [reviews,      setReviews]      = useState([]);
-  const [comment,      setComment]      = useState('');
-  const [submitting,   setSubmitting]   = useState(false);
-  const [reviewSaved,  setReviewSaved]  = useState(false);
+  const [trailerKey,   setTrailerKey]  = useState(null);
+  const [reviews,      setReviews]     = useState([]);
+  const [comment,      setComment]     = useState('');
+  const [submitting,   setSubmitting]  = useState(false);
+  const [reviewSaved,  setReviewSaved] = useState(false);
 
-  // Load movie details
   useEffect(() => {
     setLoading(true);
     setError(false);
+    setTrailerKey(null);
     getMovieDetail(omdbId)
       .then(({ data }) => {
         setMovie(data);
@@ -35,12 +44,14 @@ export default function MovieDetail() {
       .finally(() => setLoading(false));
   }, [omdbId]);
 
-  // Load reviews once we have the movie's internal DB id
+  useEffect(() => {
+    if (!omdbId) return;
+    getTrailer(omdbId).then(({ data }) => setTrailerKey(data.key)).catch(() => {});
+  }, [omdbId]);
+
   useEffect(() => {
     if (!movie?.id) return;
-    getReviews(movie.id)
-      .then(({ data }) => setReviews(data))
-      .catch(() => {});
+    getReviews(movie.id).then(({ data }) => setReviews(data)).catch(() => {});
   }, [movie?.id]);
 
   async function handleRate(val) {
@@ -52,11 +63,7 @@ export default function MovieDetail() {
       await submitRating({ movie_id: movie.id, rating: val });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
-    } catch {
-      // fail silently
-    } finally {
-      setSaving(false);
-    }
+    } catch {} finally { setSaving(false); }
   }
 
   async function handleSubmitReview(e) {
@@ -65,17 +72,12 @@ export default function MovieDetail() {
     setSubmitting(true);
     try {
       await submitReview({ movie_id: movie.id, comment });
-      // Refresh reviews list
       const { data } = await getReviews(movie.id);
       setReviews(data);
       setComment('');
       setReviewSaved(true);
       setTimeout(() => setReviewSaved(false), 2500);
-    } catch {
-      // fail silently
-    } finally {
-      setSubmitting(false);
-    }
+    } catch {} finally { setSubmitting(false); }
   }
 
   async function handleDeleteReview() {
@@ -83,185 +85,265 @@ export default function MovieDetail() {
       await deleteReview(movie.id);
       const { data } = await getReviews(movie.id);
       setReviews(data);
-    } catch {
-      // fail silently
-    }
+    } catch {}
   }
 
-  const userReview = reviews.find((r) => r.username === user?.username);
-  const avgRating  = reviews.length
-    ? (reviews.reduce((s, r) => s + (r.rating || 0), 0) / reviews.filter(r => r.rating).length || null)
-    : null;
-
-  if (loading) return <div className="movie-detail"><div className="spinner" /></div>;
+  if (loading) return <div className="md"><div className="spinner" /></div>;
 
   if (error || !movie) return (
-    <div className="movie-detail">
-      <div className="movie-detail__inner" style={{ textAlign: 'center', paddingTop: '80px' }}>
+    <div className="md">
+      <div className="md__inner" style={{ textAlign: 'center', paddingTop: '80px' }}>
         <p style={{ color: 'var(--text-muted)', marginBottom: '16px' }}>Could not load movie details.</p>
-        <button className="movie-detail__back" onClick={() => navigate(-1)}>← Go back</button>
+        <button className="md__back" onClick={() => navigate(-1)}>← Go back</button>
       </div>
     </div>
   );
 
+  const genres   = movie.genre  ? movie.genre.split(',').map(g => g.trim()).filter(Boolean)  : [];
+  const cast     = movie.actors ? movie.actors.split(',').map(a => a.trim()).filter(Boolean) : [];
+  const userReview = reviews.find((r) => r.username === user?.username);
+  const avgRating  = reviews.filter(r => r.rating).length
+    ? reviews.reduce((s, r) => s + (r.rating || 0), 0) / reviews.filter(r => r.rating).length
+    : null;
+  const communityStars = avgRating ? getStarStates(avgRating) : null;
+  const userStars      = rating    ? getStarStates(rating)    : null;
+
   return (
-    <div className="movie-detail fade-in">
+    <div className="md fade-in">
 
-      {/* Blurred backdrop */}
-      <div className="movie-detail__backdrop">
-        {movie.poster_url && (
-          <img src={movie.poster_url} alt="" className="movie-detail__backdrop-img" aria-hidden />
-        )}
-        <div className="movie-detail__backdrop-overlay" />
-      </div>
+      {/* Ambient backdrop — very subtle color wash for the whole page */}
+      {movie.poster_url && (
+        <div
+          className="md__backdrop"
+          style={{ backgroundImage: `url(${movie.poster_url})` }}
+        />
+      )}
 
-      <div className="movie-detail__inner">
-        <button className="movie-detail__back" onClick={() => navigate(-1)}>← Back</button>
+      <div className="md__inner">
+        <button className="md__back" onClick={() => navigate(-1)}>← Back</button>
 
-        {/* Main layout: poster + info */}
-        <div className="movie-detail__layout">
-          <div className="movie-detail__poster-wrap">
+        {/* ── Header: poster + info ── */}
+        <div className="md__header">
+
+          {/* Poster */}
+          <div className="md__poster-wrap">
             {movie.poster_url
-              ? <img src={movie.poster_url} alt={movie.title} className="movie-detail__poster" />
-              : <div className="movie-detail__poster-empty">🎬</div>
+              ? <img src={movie.poster_url} alt={movie.title} className="md__poster" />
+              : <div className="md__poster-empty">🎬</div>
             }
           </div>
 
-          <div className="movie-detail__info">
-            <p className="movie-detail__genre-label">{movie.genre}</p>
-            <h1 className="movie-detail__title">{movie.title}</h1>
+          {/* Info */}
+          <div className="md__info">
 
-            <div className="movie-detail__meta-row">
-              <span className="movie-detail__meta">{movie.year}</span>
-              {movie.imdb_rating && (
-                <span className="movie-detail__imdb">⭐ {movie.imdb_rating} IMDB</span>
-              )}
-              {movie.avg_rating && (
-                <span className="movie-detail__avg">★ {movie.avg_rating} Movie Rank</span>
-              )}
-            </div>
+            {/* Title + Year */}
+            <h1 className="md__title">
+              {movie.title}
+              {movie.year && <span className="md__year">{movie.year}</span>}
+            </h1>
 
+            {/* Director */}
             {movie.director && (
-              <p className="movie-detail__crew">Directed by <strong>{movie.director}</strong></p>
-            )}
-            {movie.actors && (
-              <p className="movie-detail__crew movie-detail__crew--dim">Cast: {movie.actors}</p>
-            )}
-            {movie.plot && (
-              <p className="movie-detail__plot">{movie.plot}</p>
+              <p className="md__director">
+                Directed by <span className="md__director-name">{movie.director}</span>
+              </p>
             )}
 
-            {/* Star rating widget */}
-            <div className="movie-detail__rating-block">
-              <p className="movie-detail__rating-label">
-                {user ? (rating > 0 ? 'Your rating' : 'Rate this movie') : 'Sign in to rate'}
+            {/* Genre pills */}
+            {genres.length > 0 && (
+              <div className="md__genres">
+                {genres.map((g) => (
+                  <span key={g} className="md__genre-pill">{g}</span>
+                ))}
+              </div>
+            )}
+
+            {/* Community rating */}
+            {communityStars && (
+              <div className="md__rating-row">
+                <div className="md__stars">
+                  {communityStars.map((state, i) => (
+                    <span key={i} className={`md__star md__star--${state}`}>★</span>
+                  ))}
+                </div>
+                <span className="md__rating-num">{(avgRating / 2).toFixed(2)}</span>
+                <span className="md__rating-meta">
+                  · {reviews.length} review{reviews.length !== 1 ? 's' : ''}
+                </span>
+                {movie.imdb_rating && (
+                  <span className="md__imdb">⭐ {movie.imdb_rating} IMDb</span>
+                )}
+              </div>
+            )}
+            {!communityStars && movie.imdb_rating && (
+              <div className="md__rating-row">
+                <span className="md__imdb">⭐ {movie.imdb_rating} IMDb</span>
+              </div>
+            )}
+
+            {/* Overview */}
+            {movie.plot && <p className="md__plot">{movie.plot}</p>}
+
+            {/* Cast */}
+            {cast.length > 0 && (
+              <div className="md__cast">
+                <p className="md__cast-label">Cast</p>
+                <div className="md__cast-list">
+                  {cast.map((actor) => (
+                    <span key={actor} className="md__cast-name">{actor}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Divider */}
+            <div className="md__divider" />
+
+            {/* Rate this film */}
+            <div className="md__rate">
+              <p className="md__rate-label">
+                {user
+                  ? rating > 0 ? 'Your rating' : 'Rate this film'
+                  : 'Sign in to rate'
+                }
               </p>
               {user ? (
-                <>
-                  <StarRating value={rating} onChange={handleRate} size="lg" />
-                  {saving && <span className="movie-detail__rating-status">Saving...</span>}
-                  {saved  && <span className="movie-detail__rating-status movie-detail__rating-status--saved">✓ Saved!</span>}
-                </>
+                <div className="md__rate-stars">
+                  {[2, 4, 6, 8, 10].map((val) => (
+                    <button
+                      key={val}
+                      className={`md__rate-star ${rating >= val ? 'md__rate-star--on' : ''}`}
+                      onClick={() => handleRate(val)}
+                      title={`${val / 2} stars`}
+                    >
+                      ★
+                    </button>
+                  ))}
+                  {saving && <span className="md__rate-status">Saving…</span>}
+                  {saved  && <span className="md__rate-status md__rate-status--saved">✓ Saved</span>}
+                </div>
               ) : (
-                <button className="movie-detail__signin-cta" onClick={() => navigate('/auth')}>
+                <button className="md__signin-btn" onClick={() => navigate('/auth')}>
                   Sign in to rate →
                 </button>
               )}
+
+              {/* Show user's selected rating as star visual */}
+              {user && rating > 0 && userStars && (
+                <div className="md__user-stars">
+                  {userStars.map((state, i) => (
+                    <span key={i} className={`md__star md__star--${state} md__star--sm`}>★</span>
+                  ))}
+                  <span className="md__user-rating-label">{(rating / 2).toFixed(1)} / 5</span>
+                </div>
+              )}
             </div>
+
           </div>
         </div>
 
+        {/* ── Trailer ── */}
+        {trailerKey && (
+          <section className="md__section">
+            <h2 className="md__section-heading">Trailer</h2>
+            <div className="md__trailer-player">
+              <iframe
+                src={`https://www.youtube.com/embed/${trailerKey}?rel=0&modestbranding=1`}
+                title={`${movie.title} Trailer`}
+                allow="encrypted-media; fullscreen"
+                allowFullScreen
+                className="md__trailer-iframe"
+              />
+            </div>
+          </section>
+        )}
+
         {/* ── Community Reviews ── */}
-        <div className="movie-detail__reviews">
-          <div className="movie-detail__reviews-header">
-            <h2 className="movie-detail__reviews-title">Community Reviews</h2>
-            {reviews.length > 0 && avgRating && (
-              <div className="movie-detail__reviews-avg">
-                <span className="movie-detail__reviews-avg-score">
-                  {avgRating.toFixed(1)}
-                </span>
-                <span className="movie-detail__reviews-avg-label">
-                  / 10 · {reviews.length} review{reviews.length !== 1 ? 's' : ''}
-                </span>
-              </div>
+        <section className="md__section">
+          <div className="md__reviews-heading-row">
+            <h2 className="md__section-heading">Community Reviews</h2>
+            {avgRating && reviews.length > 0 && (
+              <span className="md__reviews-avg">
+                {(avgRating / 2).toFixed(2)} avg · {reviews.length} review{reviews.length !== 1 ? 's' : ''}
+              </span>
             )}
           </div>
 
-          {/* Write / edit review form */}
+          {/* Write / edit review */}
           {user ? (
-            <form className="movie-detail__review-form" onSubmit={handleSubmitReview}>
+            <form className="md__review-form" onSubmit={handleSubmitReview}>
+              <div className="md__review-form-header">
+                <div className="md__review-avatar">{user.username.slice(0, 2).toUpperCase()}</div>
+                <span className="md__review-form-name">{user.username}</span>
+              </div>
               <textarea
-                className="movie-detail__review-input"
-                placeholder={userReview ? 'Update your review…' : 'Share your thoughts on this movie…'}
+                className="md__review-input"
+                placeholder={userReview ? 'Update your review…' : 'Share your thoughts on this film…'}
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 rows={3}
                 maxLength={1000}
               />
-              <div className="movie-detail__review-form-actions">
+              <div className="md__review-form-actions">
                 {userReview && (
-                  <button
-                    type="button"
-                    className="movie-detail__review-delete"
-                    onClick={handleDeleteReview}
-                  >
-                    Delete my review
+                  <button type="button" className="md__review-delete" onClick={handleDeleteReview}>
+                    Delete
                   </button>
                 )}
                 <button
                   type="submit"
-                  className="movie-detail__review-submit"
+                  className="md__review-submit"
                   disabled={submitting || !comment.trim()}
                 >
-                  {submitting ? 'Posting…' : userReview ? 'Update review' : 'Post review'}
+                  {submitting ? 'Posting…' : userReview ? 'Update' : 'Post Review'}
                 </button>
               </div>
-              {reviewSaved && (
-                <p className="movie-detail__review-saved">✓ Review saved!</p>
-              )}
+              {reviewSaved && <p className="md__review-saved">✓ Saved!</p>}
             </form>
           ) : (
-            <p className="movie-detail__review-signin">
-              <button className="movie-detail__signin-cta" onClick={() => navigate('/auth')}>
-                Sign in to write a review →
-              </button>
-            </p>
+            <button className="md__signin-btn" onClick={() => navigate('/auth')}>
+              Sign in to write a review →
+            </button>
           )}
 
           {/* Reviews list */}
           {reviews.length === 0 ? (
-            <p className="movie-detail__reviews-empty">
-              No reviews yet. Be the first to share your thoughts!
-            </p>
+            <p className="md__reviews-empty">No reviews yet. Be the first.</p>
           ) : (
-            <div className="movie-detail__reviews-list">
+            <div className="md__reviews-list">
               {reviews.map((review) => {
-                const initials = review.username.slice(0, 2).toUpperCase();
-                const isOwn    = review.username === user?.username;
-                const date     = new Date(review.created_at).toLocaleDateString('en-US', {
+                const isOwn   = review.username === user?.username;
+                const initials= review.username.slice(0, 2).toUpperCase();
+                const date    = new Date(review.created_at).toLocaleDateString('en-US', {
                   month: 'short', day: 'numeric', year: 'numeric',
                 });
+                const rStars  = review.rating ? getStarStates(review.rating) : null;
                 return (
-                  <div key={review.id} className={`movie-detail__review-card ${isOwn ? 'movie-detail__review-card--own' : ''}`}>
-                    <div className="movie-detail__review-avatar">{initials}</div>
-                    <div className="movie-detail__review-body">
-                      <div className="movie-detail__review-top">
-                        <span className="movie-detail__review-name">
-                          {review.username}{isOwn && <span className="movie-detail__review-you"> (you)</span>}
+                  <div key={review.id} className={`md__review-card ${isOwn ? 'md__review-card--own' : ''}`}>
+                    <div className="md__review-avatar">{initials}</div>
+                    <div className="md__review-body">
+                      <div className="md__review-top">
+                        <span className="md__review-name">
+                          {review.username}
+                          {isOwn && <span className="md__review-you">you</span>}
                         </span>
-                        <span className="movie-detail__review-date">{date}</span>
-                        {review.rating && (
-                          <span className="movie-detail__review-score">★ {review.rating}/10</span>
+                        {rStars && (
+                          <span className="md__review-stars">
+                            {rStars.map((state, i) => (
+                              <span key={i} className={`md__star md__star--${state} md__star--sm`}>★</span>
+                            ))}
+                          </span>
                         )}
+                        <span className="md__review-date">{date}</span>
                       </div>
-                      <p className="movie-detail__review-text">{review.comment}</p>
+                      <p className="md__review-text">{review.comment}</p>
                     </div>
                   </div>
                 );
               })}
             </div>
           )}
-        </div>
+        </section>
 
       </div>
     </div>

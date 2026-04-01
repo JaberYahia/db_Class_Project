@@ -22,9 +22,11 @@ async function submitRating(req, res) {
       return res.status(400).json({ error: 'movie_id and rating are required.' });
     }
 
-    // Enforce the 1-10 rating scale on the server side (in addition to the DB constraint)
-    if (rating < 1 || rating > 10) {
-      return res.status(400).json({ error: 'Rating must be between 1 and 10.' });
+    // Enforce the 1-10 rating scale on the server side (in addition to the DB constraint).
+    // typeof check is required because NaN comparisons always return false in JS,
+    // meaning a string like "abc" would silently pass the range check.
+    if (typeof rating !== 'number' || !Number.isInteger(rating) || rating < 1 || rating > 10) {
+      return res.status(400).json({ error: 'Rating must be an integer between 1 and 10.' });
     }
 
     // Make sure the movie actually exists in our database before accepting the rating

@@ -77,6 +77,8 @@ img {
   transform: scale(1.15); /* prevent blur edges */
   transition: opacity 0.5s ease;
   pointer-events: none;
+  /* Pre-promote to GPU layer so opacity transitions don't cause composite surprises */
+  will-change: opacity;
 }
 
 /* ── Spinner ── */

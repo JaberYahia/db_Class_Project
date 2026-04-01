@@ -1,16 +1,21 @@
 :root {
-  /* ── Cubs-inspired palette ── */
-  --blue-900: #020B1F;
-  --blue-800: #041226;
-  --blue-700: #071D3D;
-  --blue-600: #0E3386;
-  --blue-500: #1A4BAD;
-  --blue-400: #2E68D4;
-  --blue-300: #5B8FE8;
+  /* ── Letterboxd-inspired dark palette ── */
+  --blue-900: #0A0C0F;
+  --blue-800: #14181C;
+  --blue-700: #1C2228;
+  --blue-600: #2C3440;
+  --blue-500: #374151;
+  --blue-400: #4B5563;
+  --blue-300: #89A0B4;
 
   --white-100: #FFFFFF;
   --white-200: #EEF3FF;
-  --white-300: #D4DFFF;
+  --white-300: #99AABB;
+
+  /* ── Letterboxd signature green ── */
+  --green-500: #00E054;
+  --green-600: #00B843;
+  --green-dim:  rgba(0, 224, 84, 0.15);
 
   /* ── Semantic ── */
   --bg-primary:    var(--blue-800);
@@ -20,33 +25,33 @@
 
   --text-primary:  var(--white-100);
   --text-muted:    var(--white-300);
-  --text-dim:      #7A96CC;
+  --text-dim:      #5C7080;
 
   --accent:        var(--white-100);
   --accent-hover:  var(--white-200);
   --accent-dim:    var(--white-300);
 
-  --border:        rgba(255, 255, 255, 0.12);
-  --border-hover:  rgba(255, 255, 255, 0.35);
+  --border:        rgba(255, 255, 255, 0.08);
+  --border-hover:  rgba(255, 255, 255, 0.22);
 
   /* ── Spacing ── */
-  --nav-height: 64px;
+  --nav-height: 56px;
 
   /* ── Radius ── */
-  --radius-sm:  6px;
-  --radius-md:  12px;
-  --radius-lg:  18px;
-  --radius-xl:  24px;
+  --radius-sm:  4px;
+  --radius-md:  8px;
+  --radius-lg:  12px;
+  --radius-xl:  18px;
 
   /* ── Shadows ── */
-  --shadow-card:    0 4px 24px rgba(0, 0, 0, 0.6);
-  --shadow-glow:    0 0 20px rgba(46, 104, 212, 0.3);
-  --shadow-glow-lg: 0 0 40px rgba(46, 104, 212, 0.45);
+  --shadow-card:    0 4px 24px rgba(0, 0, 0, 0.7);
+  --shadow-glow:    0 0 20px rgba(0, 224, 84, 0.18);
+  --shadow-glow-lg: 0 0 40px rgba(0, 224, 84, 0.22);
 
   /* ── Accent / Gold ── */
   --gold-500: #FFB800;
 
-  /* ── Legacy aliases (used by scrollbar) ── */
+  /* ── Legacy aliases ── */
   --brown-800: var(--blue-800);
   --brown-500: var(--blue-400);
 

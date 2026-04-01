@@ -42,12 +42,13 @@ async function getMovieDetail(req, res) {
     if (!movie) return res.status(404).json({ error: 'Movie not found.' });
 
     // If a valid JWT was sent, req.user was populated by optionalAuth middleware
+    let user_rating = null;
     if (req.user) {
       const ratingRow = await ratingRepo.getUserRatingForMovie(req.user.id, movie.id);
-      movie.user_rating = ratingRow ? ratingRow.rating : null; // Attach the user's own rating (or null)
+      user_rating = ratingRow ? ratingRow.rating : null;
     }
 
-    res.json(movie);
+    res.json({ ...movie, user_rating });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

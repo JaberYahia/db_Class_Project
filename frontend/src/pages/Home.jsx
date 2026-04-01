@@ -1,103 +1,164 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// pages/Home.jsx — Main landing page / movie browse feed
-//
-// Layout (top to bottom):
-//   1. Hero section — headline and tagline
-//   2. "Recommended For You" row — AI picks (only shown if logged in)
-//   3. "Top Rated" row — movies sorted by community average rating
-//   4. "All Movies" row — every movie in the database
-//   5. Genre rows — one horizontal row per genre (Action, Drama, etc.)
-// ─────────────────────────────────────────────────────────────────────────────
-
-import { useEffect, useState } from 'react';
-import { getMovies, getRecommendations } from '../services/api';
+import { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { getMovies, getRecommendations, getUpcomingMovies } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 import MovieRow from '../components/MovieRow';
+import UpcomingCard from '../components/UpcomingCard';
 import './Home.css';
 
-// Genres to display as separate rows on the home page
 const GENRE_ROWS = ['Action', 'Drama', 'Crime', 'Sci-Fi', 'Adventure', 'Thriller'];
 
 export default function Home() {
-  const { user }               = useAuth();        // Check if a user is logged in
-  const [movies,  setMovies]   = useState([]);     // All movies from the database
-  const [recs,    setRecs]     = useState([]);     // Personalised recommendations (logged-in only)
-  const [loading, setLoading]  = useState(true);   // Show spinner while data is loading
+  const { user }                   = useAuth();
+  const navigate                   = useNavigate();
+  const [movies,   setMovies]      = useState([]);
+  const [recs,     setRecs]        = useState([]);
+  const [upcoming, setUpcoming]    = useState([]);
+  const [loading,  setLoading]     = useState(true);
+  const [featuredIdx, setFeatured] = useState(0);
+  const heroRef                    = useRef(null);
 
-  // Fetch movies (and recommendations if logged in) when the component mounts
-  // or when the user logs in/out (user is in the dependency array)
   useEffect(() => {
     async function load() {
       try {
-        const { data } = await getMovies(); // Fetch all movies with average ratings
-        setMovies(data);
+        const [moviesRes, upcomingRes] = await Promise.allSettled([
+          getMovies(),
+          getUpcomingMovies(),
+        ]);
+        if (moviesRes.status === 'fulfilled') setMovies(moviesRes.value.data);
+        if (upcomingRes.status === 'fulfilled') setUpcoming(upcomingRes.value.data);
 
         if (user) {
-          // Only fetch recommendations if the user is authenticated
           const { data: recData } = await getRecommendations();
           setRecs(recData);
         }
       } catch {
-        // Silently fail — the page still renders with whatever data loaded
+        // silently fail
       } finally {
         setLoading(false);
       }
     }
     load();
-  }, [user]); // Re-run when the logged-in user changes
+  }, [user]);
 
-  // Show a centered spinner while loading
+  // Rotate the featured hero every 8 seconds through top-rated movies
+  const heroPool = movies.filter((m) => m.poster_url && m.avg_rating).slice(0, 5);
+  useEffect(() => {
+    if (heroPool.length < 2) return;
+    const id = setInterval(() => setFeatured((i) => (i + 1) % heroPool.length), 8000);
+    return () => clearInterval(id);
+  }, [heroPool.length]);
+
   if (loading) return <div className="home"><div className="spinner" /></div>;
 
-  // Filter the full movie list to only those matching a given genre string
-  function moviesForGenre(genre) {
-    return movies.filter((m) => m.genre?.toLowerCase().includes(genre.toLowerCase()));
-  }
-
-  // Top rated = all movies that have at least one rating, sorted highest first
-  const topRated = [...movies]
-    .filter((m) => m.avg_rating)
-    .sort((a, b) => b.avg_rating - a.avg_rating);
+  const featured  = heroPool[featuredIdx] || null;
+  const topRated  = [...movies].filter((m) => m.avg_rating).sort((a, b) => b.avg_rating - a.avg_rating);
+  const moviesForGenre = (genre) => movies.filter((m) => m.genre?.toLowerCase().includes(genre.toLowerCase()));
 
   return (
     <div className="home fade-in">
 
-      {/* Hero Section — decorative headline at the top of the page */}
-      <section className="home__hero">
-        <div className="home__hero-content">
-          <h1 className="home__hero-title">
-            Discover your next<br />
-            <span className="home__hero-highlight">favorite film.</span>
-          </h1>
-          <p className="home__hero-sub">
-            Rate movies. Get personalized recommendations based on your taste.
-          </p>
-        </div>
-        <div className="home__hero-glow" /> {/* Decorative glow effect */}
-      </section>
+      {/* ── Cinematic Featured Hero ── */}
+      {featured && (
+        <section className="home__hero" ref={heroRef}>
+          {/* Blurred poster backdrop */}
+          <div
+            className="home__hero-bg"
+            style={{ backgroundImage: `url(${featured.poster_url})` }}
+          />
+          <div className="home__hero-overlay" />
+
+          <div className="home__hero-inner">
+            <div className="home__hero-info">
+              <p className="home__hero-label">Featured Film</p>
+              <h1 className="home__hero-title">{featured.title}</h1>
+
+              <div className="home__hero-meta">
+                <span className="home__hero-year">{featured.year}</span>
+                {featured.genre && (
+                  <span className="home__hero-genre">{featured.genre.split(',')[0]}</span>
+                )}
+                {featured.avg_rating && (
+                  <span className="home__hero-rating">★ {Number(featured.avg_rating).toFixed(1)}</span>
+                )}
+              </div>
+
+              {featured.plot && (
+                <p className="home__hero-plot">
+                  {featured.plot.length > 160 ? featured.plot.slice(0, 157) + '…' : featured.plot}
+                </p>
+              )}
+
+              <div className="home__hero-actions">
+                <button
+                  className="home__hero-btn home__hero-btn--primary"
+                  onClick={() => navigate(`/movie/${featured.omdb_id}`)}
+                >
+                  View Details
+                </button>
+              </div>
+            </div>
+
+            {/* Poster */}
+            <img
+              key={featured.omdb_id}
+              src={featured.poster_url}
+              alt={featured.title}
+              className="home__hero-poster"
+            />
+          </div>
+
+          {/* Dot indicators */}
+          {heroPool.length > 1 && (
+            <div className="home__hero-dots">
+              {heroPool.map((_, i) => (
+                <button
+                  key={i}
+                  className={`home__hero-dot ${i === featuredIdx ? 'home__hero-dot--active' : ''}`}
+                  onClick={() => setFeatured(i)}
+                  aria-label={`Feature film ${i + 1}`}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       <div className="home__content">
 
-        {/* AI Recommendations row — only visible to logged-in users with results */}
-        {user && recs.length > 0 && (
-          <MovieRow title="Recommended For You" movies={recs} badge="AI Picks" />
+        {/* ── Coming Soon ── */}
+        {upcoming.length > 0 && (
+          <section className="home__section">
+            <div className="home__section-header">
+              <h2 className="home__section-title">Coming Soon</h2>
+              <span className="home__section-badge">TMDB</span>
+            </div>
+            <div className="home__upcoming-track">
+              {upcoming.map((m) => (
+                <UpcomingCard key={m.tmdb_id} movie={m} />
+              ))}
+            </div>
+          </section>
         )}
 
-        {/* Top Rated row — movies with the highest community average rating */}
+        {/* ── Recommended For You ── */}
+        {user && recs.length > 0 && (
+          <MovieRow title="For You" movies={recs} badge="AI Picks" />
+        )}
+
+        {/* ── Top Rated ── */}
         {topRated.length > 0 && (
           <MovieRow title="Top Rated" movies={topRated} />
         )}
 
-        {/* All Movies row — every movie in the database */}
+        {/* ── All Movies ── */}
         <MovieRow title="All Movies" movies={movies} />
 
-        {/* One row per genre — skipped if no movies match that genre */}
+        {/* ── Genre Rows ── */}
         {GENRE_ROWS.map((genre) => {
-          const genreMovies = moviesForGenre(genre);
-          if (genreMovies.length === 0) return null; // Don't render an empty row
-          return (
-            <MovieRow key={genre} title={genre} movies={genreMovies} />
-          );
+          const gMovies = moviesForGenre(genre);
+          if (gMovies.length === 0) return null;
+          return <MovieRow key={genre} title={genre} movies={gMovies} />;
         })}
 
       </div>

@@ -1,67 +1,71 @@
 .movie-row {
-  margin-bottom: 48px;
+  margin-bottom: 44px;
 }
 
 .movie-row__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   padding: 0 2px;
 }
 
 .movie-row__title {
-  font-size: 1.25rem;
+  font-size: 0.8rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
 .movie-row__badge {
-  font-size: 0.7rem;
-  font-weight: 700;
-  background: var(--blue-400);
-  color: var(--white-100);
-  padding: 3px 8px;
-  border-radius: 20px;
-  letter-spacing: 0.5px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  background: var(--green-500);
+  color: #0A0C0F;
+  padding: 2px 7px;
+  border-radius: 3px;
+  letter-spacing: 0.8px;
   text-transform: uppercase;
 }
 
 .movie-row__arrows {
   display: flex;
-  gap: 6px;
+  gap: 4px;
 }
 
 .movie-row__arrow {
-  width: 34px; height: 34px;
+  width: 30px; height: 30px;
   border-radius: 50%;
-  background: var(--bg-card);
+  background: transparent;
   border: 1px solid var(--border);
-  color: var(--text-primary);
-  font-size: 1.4rem;
+  color: var(--text-dim);
+  font-size: 1.2rem;
   line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background var(--transition), border-color var(--transition);
+  transition: border-color var(--transition), color var(--transition);
 }
 .movie-row__arrow:hover {
-  background: var(--bg-elevated);
   border-color: var(--border-hover);
   color: var(--white-100);
 }
 
 .movie-row__track {
   display: flex;
-  gap: 16px;
+  gap: 14px;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   padding-bottom: 12px;
   -ms-overflow-style: none;
   scrollbar-width: none;
+  /* Promote scroll container to its own layer for smooth momentum scrolling */
+  will-change: scroll-position;
+  -webkit-overflow-scrolling: touch;
 }
 .movie-row__track::-webkit-scrollbar { display: none; }
 

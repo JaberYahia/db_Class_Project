@@ -26,12 +26,14 @@ async function getReviewsByMovie(movie_id) {
   return rows;
 }
 
-// Delete a review — only the owner can do this (enforced in controller)
+// Delete a review — only the owner can do this (enforced in controller).
+// Returns true if a row was deleted, false if no matching review existed.
 async function deleteReview({ user_id, movie_id }) {
-  await pool.query(
+  const [result] = await pool.query(
     'DELETE FROM reviews WHERE user_id = ? AND movie_id = ?',
     [user_id, movie_id]
   );
+  return result.affectedRows > 0;
 }
 
 module.exports = { upsertReview, getReviewsByMovie, deleteReview };

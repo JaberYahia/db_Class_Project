@@ -1,87 +1,109 @@
 .movie-card {
   flex-shrink: 0;
-  width: 160px;
+  width: 150px;
   cursor: pointer;
+  /* Only animate transform — GPU composited, no layout/paint */
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   will-change: transform;
+  /* Isolate repaints to this card so siblings aren't invalidated */
+  contain: layout style;
 }
 .movie-card:hover {
-  transform: translateY(-10px) scale(1.06);
-}
-.movie-card:hover .movie-card__poster-wrap {
-  box-shadow: 0 16px 48px rgba(46, 104, 212, 0.55), 0 0 0 1px rgba(91, 143, 232, 0.3);
+  transform: translateY(-8px) scale(1.05);
 }
 
 /* Poster */
 .movie-card__poster-wrap {
   position: relative;
-  width: 160px;
-  height: 240px;
+  width: 150px;
+  height: 225px;
   border-radius: var(--radius-md);
   overflow: hidden;
   background: var(--bg-card);
   box-shadow: var(--shadow-card);
-  transition: box-shadow 0.3s ease;
+  /* No box-shadow transition — paint-based, causes jank */
 }
+
+/* Glow ring overlay — animates opacity (GPU composited) instead of box-shadow */
+.movie-card__poster-wrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-md);
+  box-shadow: inset 0 0 0 1px rgba(0, 224, 84, 0.3), 0 16px 40px rgba(0, 0, 0, 0.7);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+.movie-card:hover .movie-card__poster-wrap::before {
+  opacity: 1;
+}
+
 .movie-card__poster {
   width: 100%; height: 100%;
   object-fit: cover;
+  will-change: transform;
   transition: transform 0.4s ease;
 }
 .movie-card:hover .movie-card__poster {
-  transform: scale(1.05);
+  transform: scale(1.04);
 }
 
-/* Shine sweep on hover */
+/* Shine sweep — use transform (GPU) instead of left (layout+paint) */
 .movie-card__poster-wrap::after {
   content: '';
   position: absolute;
   top: -50%;
-  left: -75%;
+  left: 0;
   width: 50%;
   height: 200%;
   background: linear-gradient(
     to right,
     transparent 0%,
-    rgba(255, 255, 255, 0.14) 50%,
+    rgba(255, 255, 255, 0.1) 50%,
     transparent 100%
   );
-  transform: skewX(-20deg);
-  transition: left 0.55s ease;
+  /* skewX baked in so we only animate translateX */
+  transform: translateX(-200%) skewX(-20deg);
+  transition: transform 0.55s ease;
   pointer-events: none;
+  z-index: 2;
 }
 .movie-card:hover .movie-card__poster-wrap::after {
-  left: 130%;
+  transform: translateX(500%) skewX(-20deg);
 }
+
 .movie-card__poster-empty {
   width: 100%; height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 3rem;
+  font-size: 2.5rem;
   color: var(--text-dim);
 }
 
 /* Badge */
 .movie-card__badge {
   position: absolute;
-  top: 8px; right: 8px;
-  background: rgba(4, 18, 38, 0.85);
-  color: var(--white-100);
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 3px 7px;
-  border-radius: 20px;
-  border: 1px solid rgba(255,255,255,0.25);
+  bottom: 6px; right: 6px;
+  background: rgba(0, 0, 0, 0.75);
+  color: var(--green-500);
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
   backdrop-filter: blur(4px);
+  letter-spacing: 0.5px;
+  z-index: 3;
 }
 
 /* Info */
 .movie-card__info {
-  padding: 10px 4px 0;
+  padding: 8px 2px 0;
 }
 .movie-card__title {
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-primary);
   white-space: nowrap;
@@ -90,9 +112,9 @@
   line-height: 1.3;
 }
 .movie-card__meta {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  margin-top: 3px;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  margin-top: 2px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -100,12 +122,12 @@
 .movie-card__stars {
   display: flex;
   gap: 1px;
-  margin-top: 5px;
+  margin-top: 4px;
 }
 .movie-card__star {
-  font-size: 0.7rem;
-  color: var(--text-dim);
+  font-size: 0.65rem;
+  color: var(--bg-elevated);
 }
 .movie-card__star--on {
-  color: var(--white-100);
+  color: var(--green-500);
 }

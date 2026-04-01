@@ -9,7 +9,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 const mysql = require('mysql2/promise'); // Promise-based MySQL client (supports async/await)
-require('dotenv').config();              // Read DB credentials from .env
+// dotenv is loaded once in server.js before any other require — no need to call it again here
 
 // Create a reusable pool of up to 10 database connections
 const pool = mysql.createPool({
