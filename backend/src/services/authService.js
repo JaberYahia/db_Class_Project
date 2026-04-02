@@ -29,9 +29,11 @@ async function signup({ username, email, password }) {
   // Insert the new user and get back their ID
   const user = await userRepo.create({ username, email, password_hash });
 
-  // Issue a JWT so the user is logged in immediately after signup
-  const token = generateToken(user);
-  return { user, token };
+  // Issue a JWT so the user is logged in immediately after signup.
+  // New accounts are always 'user' role — admins are promoted directly in the DB.
+  const tokenPayload = { ...user, role: 'user' };
+  const token = generateToken(tokenPayload);
+  return { user: { ...user, role: 'user' }, token };
 }
 
 // ─── Login ────────────────────────────────────────────────────────────────────
@@ -47,9 +49,11 @@ async function login({ email, password }) {
   const valid = await bcrypt.compare(password, user.password_hash);
   if (!valid) throw new Error('Invalid email or password.');
 
-  // Credentials are correct — issue a JWT token
+  // Credentials are correct — issue a JWT token.
+  // role is read from the DB (via SELECT *) so a DB-promoted admin gets their
+  // role reflected in the token immediately on their next login.
   const token = generateToken(user);
-  return { user: { id: user.id, username: user.username, email: user.email }, token };
+  return { user: { id: user.id, username: user.username, email: user.email, role: user.role }, token };
 }
 
 // ─── Token Generator ─────────────────────────────────────────────────────────
@@ -58,11 +62,13 @@ async function login({ email, password }) {
 // The token is valid for 7 days before the client must log in again.
 // JWT_SECRET is a long random string in .env — keeping it secret means
 // only our server can issue valid tokens.
+// role is included in the payload so the frontend can check isAdmin without
+// an extra API call. The token is still verified server-side on every request.
 function generateToken(user) {
   return jwt.sign(
-    { id: user.id, username: user.username, email: user.email }, // payload
-    process.env.JWT_SECRET, // signing secret
-    { expiresIn: '7d' }     // token expires in 7 days
+    { id: user.id, username: user.username, email: user.email, role: user.role || 'user' },
+    process.env.JWT_SECRET,
+    { expiresIn: '7d' }
   );
 }
 

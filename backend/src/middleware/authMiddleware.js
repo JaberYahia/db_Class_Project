@@ -1,57 +1,73 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// middleware/authMiddleware.js — JWT authentication middleware
+// middleware/authMiddleware.js — JWT authentication + ban enforcement
 //
 // How JWT auth works in this app:
 //   1. User logs in → server signs a JWT token with a secret key
 //   2. Client stores the token in localStorage
 //   3. Client sends the token in every request header: Authorization: Bearer <token>
-//   4. This middleware reads that header, verifies the token, and attaches the
-//      decoded user object to req.user so route handlers know who is asking
+//   4. This middleware reads that header, verifies the token, checks for active
+//      bans, and attaches the decoded user to req.user
 // ─────────────────────────────────────────────────────────────────────────────
 
-const jwt = require('jsonwebtoken');
+const jwt           = require('jsonwebtoken');
+const { getActiveBan } = require('../repositories/adminRepo');
 
 // ─── Required Auth ────────────────────────────────────────────────────────────
-// Use this on any route that must be logged in (ratings, recommendations).
-// Blocks the request with 401/403 if no valid token is present.
+// Use this on any route that must be logged in (ratings, recommendations, admin).
+// Blocks the request with 401/403 if no valid token is present, or if the user
+// has an active ban.
 
-function authMiddleware(req, res, next) {
+async function authMiddleware(req, res, next) {
   const authHeader = req.headers['authorization']; // e.g. "Bearer eyJhbGci..."
-  const token = authHeader && authHeader.split(' ')[1]; // Extract just the token part after "Bearer "
+  const token = authHeader && authHeader.split(' ')[1]; // Extract the token after "Bearer "
 
-  // No token at all — user is not authenticated
   if (!token) {
     return res.status(401).json({ error: 'Access denied. No token provided.' });
   }
 
+  // Step 1: Verify the JWT signature and expiry
+  let decoded;
   try {
-    // Verify the token signature using our secret key.
-    // If the token was tampered with or has expired, jwt.verify() throws.
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // Attach { id, username, email } to the request object
-    next();             // Pass control to the actual route handler
-  } catch (err) {
-    // Token was invalid or expired
+    decoded = jwt.verify(token, process.env.JWT_SECRET); // throws if invalid or expired
+  } catch {
     return res.status(403).json({ error: 'Invalid or expired token.' });
   }
+
+  // Step 2: Check if the user has an active ban before letting them through.
+  // If the DB is unavailable, we fail open (let the request through) rather than
+  // locking out all users whenever the DB hiccups.
+  try {
+    const ban = await getActiveBan(decoded.id);
+    if (ban) {
+      const message = ban.type === 'timeout'
+        ? 'Your account is temporarily suspended.'
+        : 'Your account has been permanently banned.';
+      return res.status(403).json({ error: message, reason: ban.reason || null });
+    }
+  } catch {
+    // Ban check failed (DB error) — proceed without blocking
+  }
+
+  req.user = decoded; // Attach { id, username, email, role } to the request
+  next();
 }
 
 // ─── Optional Auth ────────────────────────────────────────────────────────────
 // Use this on routes that work for both guests and logged-in users.
-// If a valid token is present it attaches req.user; if not, it just continues.
-// Example: movie detail page — guests can view, logged-in users see their rating.
+// Does NOT check bans — banned users can still view public content (movies, etc.)
+// but cannot rate or review (those routes use required authMiddleware).
 
 function optionalAuth(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
   if (token) {
     try {
-      req.user = jwt.verify(token, process.env.JWT_SECRET); // Attach user if token is valid
+      req.user = jwt.verify(token, process.env.JWT_SECRET);
     } catch {
-      // Invalid token — just ignore it and treat the request as anonymous
+      // Invalid token — treat the request as anonymous
     }
   }
-  next(); // Always continue, even if no token was found
+  next();
 }
 
 module.exports = authMiddleware;

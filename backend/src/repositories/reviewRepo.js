@@ -36,4 +36,20 @@ async function deleteReview({ user_id, movie_id }) {
   return result.affectedRows > 0;
 }
 
-module.exports = { upsertReview, getReviewsByMovie, deleteReview };
+// Get all reviews written by a specific user, joined with movie info and their rating
+async function getReviewsByUser(user_id) {
+  const [rows] = await pool.query(
+    `SELECT rv.id, rv.comment, rv.created_at,
+            m.omdb_id, m.title, m.poster_url, m.year,
+            ra.rating
+     FROM reviews rv
+     JOIN movies m ON rv.movie_id = m.id
+     LEFT JOIN ratings ra ON ra.user_id = rv.user_id AND ra.movie_id = rv.movie_id
+     WHERE rv.user_id = ?
+     ORDER BY rv.created_at DESC`,
+    [user_id]
+  );
+  return rows;
+}
+
+module.exports = { upsertReview, getReviewsByMovie, getReviewsByUser, deleteReview };

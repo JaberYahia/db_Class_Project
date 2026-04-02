@@ -59,4 +59,15 @@ async function deleteReview(req, res) {
   }
 }
 
-module.exports = { getReviews, submitReview, deleteReview };
+// GET /api/reviews/me
+// Returns all reviews written by the current user with movie info. Auth required.
+async function getMyReviews(req, res) {
+  try {
+    const reviews = await reviewRepo.getReviewsByUser(req.user.id);
+    res.json(reviews);
+  } catch (err) {
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+}
+
+module.exports = { getReviews, getMyReviews, submitReview, deleteReview };

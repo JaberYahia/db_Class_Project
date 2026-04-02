@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getMovies, getRecommendations, getUpcomingMovies } from '../services/api';
+import { getMovies, getRecommendations, getUpcomingMovies, getNowPlayingMovies } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 import MovieRow from '../components/MovieRow';
 import UpcomingCard from '../components/UpcomingCard';
@@ -11,22 +11,25 @@ const GENRE_ROWS = ['Action', 'Drama', 'Crime', 'Sci-Fi', 'Adventure', 'Thriller
 export default function Home() {
   const { user }                   = useAuth();
   const navigate                   = useNavigate();
-  const [movies,   setMovies]      = useState([]);
-  const [recs,     setRecs]        = useState([]);
-  const [upcoming, setUpcoming]    = useState([]);
-  const [loading,  setLoading]     = useState(true);
+  const [movies,     setMovies]     = useState([]);
+  const [recs,       setRecs]       = useState([]);
+  const [upcoming,   setUpcoming]   = useState([]);
+  const [nowPlaying, setNowPlaying] = useState([]);
+  const [loading,    setLoading]    = useState(true);
   const [featuredIdx, setFeatured] = useState(0);
   const heroRef                    = useRef(null);
 
   useEffect(() => {
     async function load() {
       try {
-        const [moviesRes, upcomingRes] = await Promise.allSettled([
+        const [moviesRes, upcomingRes, nowPlayingRes] = await Promise.allSettled([
           getMovies(),
           getUpcomingMovies(),
+          getNowPlayingMovies(),
         ]);
-        if (moviesRes.status === 'fulfilled') setMovies(moviesRes.value.data);
-        if (upcomingRes.status === 'fulfilled') setUpcoming(upcomingRes.value.data);
+        if (moviesRes.status    === 'fulfilled') setMovies(moviesRes.value.data);
+        if (upcomingRes.status  === 'fulfilled') setUpcoming(upcomingRes.value.data);
+        if (nowPlayingRes.status === 'fulfilled') setNowPlaying(nowPlayingRes.value.data);
 
         if (user) {
           const { data: recData } = await getRecommendations();
@@ -125,6 +128,21 @@ export default function Home() {
       )}
 
       <div className="home__content">
+
+        {/* ── Just Released ── */}
+        {nowPlaying.length > 0 && (
+          <section className="home__section">
+            <div className="home__section-header">
+              <h2 className="home__section-title">Just Released</h2>
+              <span className="home__section-badge home__section-badge--green">In Theaters</span>
+            </div>
+            <div className="home__upcoming-track">
+              {nowPlaying.map((m) => (
+                <UpcomingCard key={m.tmdb_id} movie={m} />
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* ── Coming Soon ── */}
         {upcoming.length > 0 && (

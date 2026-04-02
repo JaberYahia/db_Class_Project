@@ -6,26 +6,47 @@
   min-height: 100vh;
   padding-top: var(--nav-height);
   position: relative;
+  background: var(--bg-primary);
 }
 
-/* Very subtle fixed backdrop — just a hint of the movie's color palette */
+/* ── Full-width blurred backdrop ── */
 .md__backdrop {
-  position: fixed;
-  inset: 0;
+  position: relative;
+  width: 100%;
+  height: 320px;
+  overflow: hidden;
   z-index: 0;
+}
+
+.md__backdrop-img {
+  position: absolute;
+  inset: 0;
   background-size: cover;
-  background-position: center;
-  filter: blur(60px) brightness(0.12) saturate(1.5);
+  background-position: center top;
+  filter: blur(20px) brightness(0.35) saturate(1.4);
   transform: scale(1.08);
   will-change: opacity;
 }
 
-.md__inner {
+.md__backdrop-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(20, 24, 28, 0.2) 0%,
+    rgba(20, 24, 28, 0.85) 70%,
+    var(--bg-primary) 100%
+  );
+}
+
+/* ── Page container ── */
+.md__wrap {
   position: relative;
   z-index: 1;
   max-width: 1060px;
   margin: 0 auto;
-  padding: 40px 48px 100px;
+  padding: 0 48px 100px;
+  margin-top: -260px;
 }
 
 /* Back button */
@@ -34,7 +55,7 @@
   color: var(--text-dim);
   font-size: 0.8rem;
   padding: 0;
-  margin-bottom: 36px;
+  margin-bottom: 24px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -42,28 +63,38 @@
 }
 .md__back:hover { color: var(--white-100); }
 
-/* ─── Header: poster + info ─────────────────────────── */
-.md__header {
+/* ── Two-column body ── */
+.md__body {
   display: flex;
-  gap: 52px;
+  gap: 40px;
   align-items: flex-start;
-  margin-bottom: 64px;
+  margin-bottom: 48px;
+}
+
+/* ══ LEFT SIDEBAR ══ */
+.md__sidebar {
+  flex-shrink: 0;
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 /* Poster */
 .md__poster-wrap {
-  flex-shrink: 0;
-  width: 230px;
+  width: 100%;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.8);
 }
 .md__poster {
   width: 100%;
   display: block;
   border-radius: var(--radius-md);
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.8);
 }
 .md__poster-empty {
-  width: 230px;
-  height: 345px;
+  width: 100%;
+  height: 300px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -73,16 +104,199 @@
   color: var(--text-dim);
 }
 
-/* Info column */
-.md__info {
+/* Action buttons */
+.md__actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+}
+.md__action {
+  flex: 1;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  transition: background var(--transition), border-color var(--transition), color var(--transition);
+  cursor: pointer;
+}
+.md__action:hover {
+  background: var(--bg-card);
+  border-color: var(--border-hover);
+}
+.md__action--on {
+  background: var(--green-dim);
+  border-color: var(--green-500);
+  color: var(--green-500);
+}
+.md__action-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--text-muted);
+  transition: color var(--transition);
+}
+.md__action--on .md__action-icon { color: var(--green-500); }
+.md__action:hover .md__action-icon { color: var(--white-100); }
+.md__action-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-dim);
+  transition: color var(--transition);
+}
+.md__action--on .md__action-label { color: var(--green-500); }
+.md__action:hover .md__action-label { color: var(--text-muted); }
+
+/* ── Like button — red heart ── */
+.md__action--liked {
+  background: rgba(220, 50, 80, 0.12);
+  border-color: #DC3250;
+}
+.md__action--liked .md__action-icon { color: #DC3250; }
+.md__action--liked .md__action-label { color: #DC3250; }
+.md__action--like:hover .md__action-icon { color: #ff6680; }
+
+/* Heart pop animation */
+.md__heart {
+  display: inline-block;
+  transition: color 0.2s ease;
+}
+.md__heart--pop {
+  animation: heartPop 0.55s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards;
+}
+@keyframes heartPop {
+  0%   { transform: scale(1);    }
+  20%  { transform: scale(1.6);  }
+  40%  { transform: scale(0.85); }
+  60%  { transform: scale(1.3);  color: #DC3250; }
+  80%  { transform: scale(0.95); }
+  100% { transform: scale(1);    }
+}
+
+/* "Added!" flash on watchlist */
+.md__added-flash {
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  color: var(--green-500);
+  animation: addedSlide 1.4s ease forwards;
+  white-space: nowrap;
+}
+@keyframes addedSlide {
+  0%   { opacity: 0; transform: translateY(4px); }
+  15%  { opacity: 1; transform: translateY(0);   }
+  70%  { opacity: 1; transform: translateY(0);   }
+  100% { opacity: 0; transform: translateY(-3px);}
+}
+
+/* Rate block */
+.md__rate-block {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.md__rate-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-dim);
+}
+.md__rate-stars {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.md__rate-star {
+  background: transparent;
+  font-size: 1.5rem;
+  color: var(--bg-elevated);
+  transition: color 0.12s ease, transform 0.12s ease;
+  padding: 0;
+  line-height: 1;
+  will-change: transform;
+  cursor: pointer;
+}
+.md__rate-star:hover,
+.md__rate-star--on { color: var(--green-500); }
+
+/* ── Bounce: plays on the tip star as the cursor sweeps across ── */
+@keyframes starBounce {
+  0%   { transform: scale(1);    }
+  30%  { transform: scale(1.5);  }
+  55%  { transform: scale(0.85); }
+  75%  { transform: scale(1.2);  }
+  90%  { transform: scale(0.97); }
+  100% { transform: scale(1);    }
+}
+.md__rate-star--bounce {
+  animation: starBounce 0.35s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards;
+}
+
+/* ── Burst: plays on all lit stars immediately after a click ── */
+@keyframes starBurst {
+  0%   { transform: scale(1);    filter: brightness(1);   }
+  20%  { transform: scale(1.4);  filter: brightness(2);   }
+  55%  { transform: scale(0.88); filter: brightness(1.3); }
+  80%  { transform: scale(1.08); filter: brightness(1);   }
+  100% { transform: scale(1);    filter: brightness(1);   }
+}
+.md__rate-star--burst {
+  animation: starBurst 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards;
+}
+
+.md__save-status {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+.md__save-status--ok { color: var(--green-500); }
+
+/* User rating star display (small) */
+.md__user-star-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.md__user-rating-label {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  margin-left: 5px;
+}
+
+/* Sign in CTA */
+.md__signin-cta {
+  background: var(--green-500);
+  color: #0A0C0F;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 9px 14px;
+  border-radius: var(--radius-sm);
+  width: 100%;
+  text-align: center;
+  transition: background var(--transition);
+  cursor: pointer;
+}
+.md__signin-cta:hover { background: var(--green-600); color: #fff; }
+.md__signin-cta--wide { width: 100%; margin-bottom: 24px; }
+
+/* ══ RIGHT CONTENT ══ */
+.md__content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  padding-top: 4px;
+  gap: 16px;
+  padding-top: 140px;
 }
 
-/* Title */
+/* Title + Year */
 .md__title {
   font-size: clamp(1.8rem, 4vw, 2.6rem);
   font-weight: 700;
@@ -101,9 +315,8 @@
 
 /* Director */
 .md__director {
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   color: var(--text-dim);
-  margin-top: -6px;
 }
 .md__director-name {
   color: var(--text-muted);
@@ -117,9 +330,9 @@
   gap: 6px;
 }
 .md__genre-pill {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 500;
-  padding: 4px 12px;
+  padding: 3px 10px;
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border);
@@ -134,30 +347,34 @@
   gap: 10px;
   flex-wrap: wrap;
 }
-.md__stars {
+.md__display-stars {
   display: flex;
   gap: 2px;
 }
-.md__star {
-  font-size: 1.15rem;
+.md__display-star {
+  font-size: 1.1rem;
   line-height: 1;
 }
-.md__star--full  { color: var(--green-500); }
-.md__star--half  { color: var(--green-500); opacity: 0.55; }
-.md__star--empty { color: var(--bg-elevated); }
-.md__star--sm    { font-size: 0.85rem; }
+.md__display-star--full  { color: var(--green-500); }
+.md__display-star--half  { color: var(--green-500); opacity: 0.5; }
+.md__display-star--empty { color: var(--bg-elevated); }
+.md__display-star--sm    { font-size: 0.82rem; }
 
 .md__rating-num {
   font-size: 1rem;
   font-weight: 700;
   color: var(--green-500);
 }
-.md__rating-meta {
+.md__rating-count {
   font-size: 0.8rem;
   color: var(--text-dim);
 }
+.md__rating-none {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
 .md__imdb {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 600;
   padding: 3px 10px;
   border-radius: 4px;
@@ -175,9 +392,13 @@
 }
 
 /* Cast */
-.md__cast { display: flex; flex-direction: column; gap: 8px; }
-.md__cast-label {
-  font-size: 0.68rem;
+.md__cast {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.md__cast-heading {
+  font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1.5px;
@@ -188,93 +409,28 @@
   flex-wrap: wrap;
   gap: 6px;
 }
-.md__cast-name {
-  font-size: 0.8rem;
+.md__cast-chip {
+  font-size: 0.78rem;
   color: var(--text-muted);
   background: var(--bg-secondary);
   border: 1px solid var(--border);
-  padding: 4px 12px;
+  padding: 3px 10px;
   border-radius: 4px;
   transition: border-color var(--transition), color var(--transition);
 }
-.md__cast-name:hover {
+.md__cast-chip:hover {
   border-color: var(--border-hover);
   color: var(--white-100);
 }
 
-/* Divider */
-.md__divider {
-  height: 1px;
-  background: var(--border);
-  margin: 4px 0;
-}
-
-/* Rate this film */
-.md__rate {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.md__rate-label {
-  font-size: 0.68rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  color: var(--text-dim);
-}
-.md__rate-stars {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.md__rate-star {
-  background: transparent;
-  font-size: 1.6rem;
-  color: var(--bg-elevated);
-  transition: color 0.15s ease, transform 0.15s ease;
-  padding: 0;
-  line-height: 1;
-  will-change: transform;
-}
-.md__rate-star:hover,
-.md__rate-star--on { color: var(--green-500); }
-.md__rate-star:hover { transform: scale(1.15); }
-
-.md__rate-status { font-size: 0.8rem; color: var(--text-dim); margin-left: 8px; }
-.md__rate-status--saved { color: var(--green-500); }
-
-.md__user-stars {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-}
-.md__user-rating-label {
-  font-size: 0.75rem;
-  color: var(--text-dim);
-  margin-left: 6px;
-}
-
-/* Sign in CTA */
-.md__signin-btn {
-  background: var(--green-500);
-  color: #0A0C0F;
-  font-size: 0.875rem;
-  font-weight: 800;
-  padding: 10px 20px;
-  border-radius: var(--radius-sm);
-  width: fit-content;
-  transition: background var(--transition);
-}
-.md__signin-btn:hover { background: var(--green-600); color: #fff; }
-
-/* ─── Sections (Trailer + Reviews) ──────────────────── */
+/* ── Sections (Trailer + Reviews) ── */
 .md__section {
-  padding-top: 48px;
+  padding-top: 40px;
   border-top: 1px solid var(--border);
-  margin-bottom: 48px;
+  margin-bottom: 40px;
 }
 .md__section-heading {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 2px;
@@ -301,15 +457,16 @@
   display: block;
 }
 
-/* ─── Reviews ────────────────────────────────────────── */
-.md__reviews-heading-row {
+/* ── Reviews ── */
+.md__reviews-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 20px;
 }
-.md__reviews-avg {
-  font-size: 0.8rem;
+.md__reviews-top .md__section-heading { margin-bottom: 0; }
+.md__reviews-stat {
+  font-size: 0.78rem;
   color: var(--text-dim);
 }
 
@@ -318,18 +475,18 @@
   background: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 18px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
 }
-.md__review-form-header {
+.md__review-form-meta {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-.md__review-form-name {
+.md__review-form-user {
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--text-muted);
@@ -345,10 +502,12 @@
   padding: 12px 14px;
   resize: vertical;
   transition: border-color var(--transition);
+  font-family: inherit;
 }
-.md__review-input:focus       { border-color: var(--green-600); }
+.md__review-input:focus        { outline: none; border-color: var(--green-600); }
 .md__review-input::placeholder { color: var(--text-dim); }
-.md__review-form-actions {
+
+.md__review-actions {
   display: flex;
   justify-content: flex-end;
   align-items: center;
@@ -357,30 +516,35 @@
 .md__review-submit {
   background: var(--green-500);
   color: #0A0C0F;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 800;
   padding: 9px 20px;
   border-radius: var(--radius-sm);
   transition: background var(--transition), opacity var(--transition);
+  cursor: pointer;
 }
 .md__review-submit:hover:not(:disabled) { background: var(--green-600); color: #fff; }
 .md__review-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
 .md__review-delete {
   background: transparent;
   color: var(--text-dim);
   font-size: 0.78rem;
   padding: 8px 0;
   transition: color var(--transition);
+  cursor: pointer;
 }
 .md__review-delete:hover { color: #e07070; }
+
 .md__review-saved {
   font-size: 0.78rem;
   color: var(--green-500);
   text-align: right;
+  margin: 0;
 }
 
-/* Review avatar — shared between form + cards */
-.md__review-avatar {
+/* Avatar — shared */
+.md__avatar {
   flex-shrink: 0;
   width: 36px;
   height: 36px;
@@ -389,11 +553,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   font-weight: 800;
   color: #0A0C0F;
 }
+.md__avatar--review { width: 34px; height: 34px; }
 
+/* Review list */
 .md__reviews-empty {
   font-size: 0.875rem;
   color: var(--text-dim);
@@ -402,7 +568,7 @@
 .md__reviews-list {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 0;
 }
 
 /* Individual review card */
@@ -411,10 +577,9 @@
   gap: 14px;
   padding: 18px 0;
   border-bottom: 1px solid var(--border);
-  transition: background var(--transition);
 }
 .md__review-card:last-child { border-bottom: none; }
-.md__review-card--own .md__review-avatar { background: var(--green-500); }
+.md__review-card--own .md__avatar { background: var(--green-500); }
 
 .md__review-body {
   flex: 1;
@@ -422,13 +587,13 @@
   flex-direction: column;
   gap: 8px;
 }
-.md__review-top {
+.md__review-meta {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 }
-.md__review-name {
+.md__review-username {
   font-size: 0.875rem;
   font-weight: 700;
   color: var(--text-primary);
@@ -437,7 +602,7 @@
   gap: 6px;
 }
 .md__review-you {
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -448,20 +613,39 @@
 }
 .md__review-stars { display: flex; gap: 1px; }
 .md__review-date {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: var(--text-dim);
   margin-left: auto;
 }
 .md__review-text {
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   color: var(--text-muted);
   line-height: 1.75;
+  margin: 0;
 }
 
-/* ─── Responsive ─────────────────────────────────────── */
-@media (max-width: 768px) {
-  .md__inner   { padding: 24px 24px 80px; }
-  .md__header  { flex-direction: column; gap: 24px; }
-  .md__poster-wrap { width: 160px; }
-  .md__title   { font-size: 1.7rem; }
+/* Spinner */
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--green-500);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin: 120px auto 0;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Responsive ── */
+@media (max-width: 840px) {
+  .md__wrap  { padding: 0 24px 80px; margin-top: -200px; }
+  .md__body  { flex-direction: column; gap: 24px; }
+  .md__sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; align-items: flex-start; }
+  .md__poster-wrap { width: 140px; }
+  .md__actions { flex: 1; }
+  .md__rate-block { flex: 1; min-width: 160px; }
+  .md__content { padding-top: 0; }
+  .md__title   { font-size: 1.6rem; }
 }

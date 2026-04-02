@@ -26,9 +26,10 @@ import Auth            from './pages/Auth';
 import Onboarding      from './pages/Onboarding';
 import Home            from './pages/Home';
 import MovieDetail     from './pages/MovieDetail';
-import Recommendations from './pages/Recommendations';
-import Genres          from './pages/Genres';
-import Profile         from './pages/Profile';
+import Recommendations  from './pages/Recommendations';
+import Genres           from './pages/Genres';
+import Profile          from './pages/Profile';
+import AdminDashboard   from './pages/AdminDashboard';
 
 // ─── Protected Route ─────────────────────────────────────────────────────────
 // Wraps any page that should only be accessible when the user is logged in.
@@ -39,6 +40,18 @@ function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) return <div className="spinner" style={{ marginTop: '40vh' }} />;
   return user ? children : <Navigate to="/auth" replace />;
+}
+
+// ─── Admin Route ──────────────────────────────────────────────────────────────
+// Extends ProtectedRoute — also requires role === 'admin'.
+// Non-admins who are logged in are redirected to home rather than /auth.
+
+function AdminRoute({ children }) {
+  const { user, isAdmin, loading } = useAuth();
+  if (loading) return <div className="spinner" style={{ marginTop: '40vh' }} />;
+  if (!user)    return <Navigate to="/auth" replace />;
+  if (!isAdmin) return <Navigate to="/"    replace />;
+  return children;
 }
 
 // ─── App Routes ───────────────────────────────────────────────────────────────
@@ -68,6 +81,7 @@ function AppRoutes() {
         <Route path="/"                element={<Home />} />
         <Route path="/movie/:omdbId"   element={<MovieDetail />} />
         <Route path="/genres"          element={<Genres />} />
+        <Route path="/admin"           element={<AdminRoute><AdminDashboard /></AdminRoute>} />
         <Route path="*"                element={<Navigate to="/" replace />} />
       </Routes>
     </PosterBackdropContext.Provider>

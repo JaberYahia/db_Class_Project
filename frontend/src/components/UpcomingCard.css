@@ -1,7 +1,7 @@
 .upcoming-card {
   flex-shrink: 0;
   width: 150px;
-  cursor: default;
+  cursor: pointer;
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   will-change: transform;
   contain: layout style;
@@ -49,6 +49,48 @@
   text-align: center;
   letter-spacing: 0.5px;
   text-transform: uppercase;
+}
+
+/* Loading overlay */
+.upcoming-card--loading { opacity: 0.7; pointer-events: none; }
+
+.upcoming-card__spinner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.45);
+}
+.upcoming-card__spinner::after {
+  content: '';
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba(255,255,255,0.2);
+  border-top-color: var(--green-500);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+.upcoming-card__not-found {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.75);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 8px;
+  animation: fadeInOut 2.5s ease forwards;
+}
+@keyframes fadeInOut {
+  0%   { opacity: 0; }
+  15%  { opacity: 1; }
+  75%  { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 .upcoming-card__info {

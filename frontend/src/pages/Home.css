@@ -196,6 +196,12 @@
   text-transform: uppercase;
   border: 1px solid var(--border);
 }
+.home__section-badge--green {
+  background: var(--green-dim);
+  color: var(--green-500);
+  border-color: rgba(0, 224, 84, 0.25);
+}
+
 .home__upcoming-track {
   display: flex;
   gap: 14px;

@@ -66,9 +66,13 @@ export function AuthProvider({ children }) {
     setUser(null); // Clears the user → triggers redirect in ProtectedRoute
   }
 
-  // Provide { user, loading, login, signup, logout } to all child components
+  // isAdmin is derived from the user object — no extra API call needed because
+  // the role is included in the JWT payload and returned in the user object.
+  const isAdmin = user?.role === 'admin';
+
+  // Provide { user, isAdmin, loading, login, signup, logout } to all child components
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, isAdmin, loading, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -19,4 +19,25 @@ async function getTrailer(req, res) {
   }
 }
 
-module.exports = { getUpcoming, getTrailer };
+async function getNowPlaying(req, res) {
+  try {
+    const movies = await tmdbService.getNowPlaying();
+    res.json(movies);
+  } catch {
+    res.json([]);
+  }
+}
+
+// GET /api/tmdb/resolve/:tmdbId
+// Looks up the OMDB record for a TMDB movie, saves it to our DB, returns omdb_id
+async function resolveMovie(req, res) {
+  try {
+    const omdbId = await tmdbService.resolveToOmdbId(req.params.tmdbId);
+    if (!omdbId) return res.status(404).json({ error: 'Could not resolve movie.' });
+    res.json({ omdb_id: omdbId });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+module.exports = { getUpcoming, getNowPlaying, getTrailer, resolveMovie };

@@ -12,13 +12,15 @@ require('dotenv').config(); // Load DB credentials, JWT secret, and OMDB key fro
 const express = require('express');
 const cors    = require('cors');
 
-// Import the five route modules — each handles a distinct feature area
+// Import all route modules — each handles a distinct feature area
 const authRoutes           = require('./src/routes/auth');
 const movieRoutes          = require('./src/routes/movies');
 const ratingRoutes         = require('./src/routes/ratings');
 const recommendationRoutes = require('./src/routes/recommendations');
 const reviewRoutes         = require('./src/routes/reviews');
 const tmdbRoutes           = require('./src/routes/tmdb');
+const userActionRoutes     = require('./src/routes/userActions');
+const adminRoutes          = require('./src/routes/admin');
 
 const app  = express();
 const PORT = process.env.PORT || 5001; // Default to 5001 if PORT is not set in .env
@@ -57,6 +59,12 @@ app.use('/api/reviews', reviewRoutes);
 // GET /api/tmdb/upcoming        → upcoming movies from TMDB
 // GET /api/tmdb/trailer/:omdbId → YouTube trailer key for a movie
 app.use('/api/tmdb', tmdbRoutes);
+
+// GET/POST /api/actions/...  → watched, liked, watchlist (auth required)
+app.use('/api/actions', userActionRoutes);
+
+// GET/DELETE /api/admin/...  → review moderation, user bans (admin only)
+app.use('/api/admin', adminRoutes);
 
 // ─── Health Check ─────────────────────────────────────────────────────────────
 

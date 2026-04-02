@@ -26,7 +26,8 @@ export default function MovieCard({ movie }) {
   return (
     <div
       className="movie-card"
-      onClick={() => navigate(`/movie/${movie.omdb_id}`)}
+      onClick={() => movie.omdb_id && navigate(`/movie/${movie.omdb_id}`)}
+      style={!movie.omdb_id ? { cursor: 'default' } : undefined}
       onMouseEnter={() => movie.poster_url && setBgPoster?.(movie.poster_url)}
       onMouseLeave={() => setBgPoster?.(null)}
     >

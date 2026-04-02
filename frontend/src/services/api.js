@@ -50,12 +50,34 @@ export const getRecommendations = () => api.get('/api/recommendations'); // AI-p
 // ─── Review Endpoints ─────────────────────────────────────────────────────────
 
 export const getReviews    = (movieId) => api.get(`/api/reviews/${movieId}`);
+export const getMyReviews  = ()        => api.get('/api/reviews/me');
 export const submitReview  = (data)    => api.post('/api/reviews', data);
 export const deleteReview  = (movieId) => api.delete(`/api/reviews/${movieId}`);
 
 // ─── TMDB Endpoints ───────────────────────────────────────────────────────────
 
-export const getUpcomingMovies = ()       => api.get('/api/tmdb/upcoming');
-export const getTrailer        = (omdbId) => api.get(`/api/tmdb/trailer/${omdbId}`);
+export const getUpcomingMovies   = ()        => api.get('/api/tmdb/upcoming');
+export const getNowPlayingMovies = ()        => api.get('/api/tmdb/now-playing');
+export const resolveTmdbMovie    = (tmdbId)  => api.get(`/api/tmdb/resolve/${tmdbId}`);
+export const getTrailer          = (omdbId)  => api.get(`/api/tmdb/trailer/${omdbId}`);
+
+// ─── User Action Endpoints (Watched / Liked / Watchlist) ─────────────────────
+
+export const getMovieActions    = (omdbId) => api.get(`/api/actions/movie/${omdbId}`);
+export const toggleWatched      = (omdbId) => api.post(`/api/actions/watched/${omdbId}`);
+export const toggleLiked        = (omdbId) => api.post(`/api/actions/liked/${omdbId}`);
+export const toggleWatchlist    = (omdbId) => api.post(`/api/actions/watchlist/${omdbId}`);
+export const getMyWatched       = ()       => api.get('/api/actions/watched');
+export const getMyLiked         = ()       => api.get('/api/actions/liked');
+export const getMyWatchlist     = ()       => api.get('/api/actions/watchlist');
+
+// ─── Admin Endpoints (admin role required) ────────────────────────────────────
+
+export const adminGetReviews   = ()                    => api.get('/api/admin/reviews');
+export const adminDeleteReview = (reviewId)            => api.delete(`/api/admin/reviews/${reviewId}`);
+export const adminGetUsers     = ()                    => api.get('/api/admin/users');
+// data = { type: 'ban'|'timeout', reason?: string, duration_hours?: number }
+export const adminBanUser      = (userId, data)        => api.post(`/api/admin/ban/${userId}`, data);
+export const adminUnbanUser    = (userId)              => api.delete(`/api/admin/ban/${userId}`);
 
 export default api;
